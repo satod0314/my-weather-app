@@ -1,0 +1,126 @@
+{\rtf1\ansi\ansicpg932\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="ja">\
+<head>\
+  <meta charset="UTF-8">\
+  <title>\uc0\u12486 \u12524 \u12499 \u29992 \u22825 \u27671 \u20104 \u22577 \u21407 \u31295 \u12481 \u12515 \u12483 \u12488 \u12508 \u12483 \u12488 </title>\
+  <style>\
+    /* LINE\uc0\u39080 \u12481 \u12515 \u12483 \u12488 \u30011 \u38754 \u12398 \u12473 \u12479 \u12452 \u12523  */\
+    body \{\
+      font-family: Arial, sans-serif;\
+      background: #f0f0f0;\
+      margin: 0;\
+      padding: 20px;\
+    \}\
+    .chat-container \{\
+      max-width: 600px;\
+      margin: 0 auto;\
+      background: #fff;\
+      border-radius: 10px;\
+      padding: 10px;\
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);\
+      height: 70vh;\
+      overflow-y: auto;\
+    \}\
+    .message \{\
+      margin: 10px;\
+      padding: 10px;\
+      border-radius: 5px;\
+      white-space: pre-wrap;\
+    \}\
+    .bot \{\
+      background: #e1ffc7;\
+      text-align: left;\
+    \}\
+    .user \{\
+      background: #c7d8ff;\
+      text-align: right;\
+    \}\
+    .input-area \{\
+      max-width: 600px;\
+      margin: 10px auto 0;\
+      display: flex;\
+    \}\
+    .input-area input \{\
+      flex: 1;\
+      padding: 10px;\
+      border-radius: 5px;\
+      border: 1px solid #ccc;\
+    \}\
+    .input-area button,\
+    #generateButton \{\
+      padding: 10px;\
+      margin-left: 5px;\
+      border: none;\
+      background: #007bff;\
+      color: #fff;\
+      border-radius: 5px;\
+      cursor: pointer;\
+    \}\
+    #generateButton \{\
+      display: block;\
+      max-width: 600px;\
+      margin: 10px auto;\
+    \}\
+  </style>\
+</head>\
+<body>\
+  <div class="chat-container" id="chat">\
+    <!-- \uc0\u12481 \u12515 \u12483 \u12488 \u12513 \u12483 \u12475 \u12540 \u12472 \u12364 \u12371 \u12371 \u12395 \u34920 \u31034 \u12373 \u12428 \u12414 \u12377  -->\
+  </div>\
+  \
+  <!-- \uc0\u21407 \u31295 \u29983 \u25104 \u12508 \u12479 \u12531  -->\
+  <button id="generateButton" onclick="generateScript()">\uc0\u29983 \u25104 </button>\
+  \
+  <div class="input-area">\
+    <input type="text" id="userInput" placeholder="\uc0\u20462 \u27491 \u29992 \u12398 \u25991 \u65288 \u20363 \u65306 \u12300 \u27671 \u28201 \u12434 30\u24230 \u12395 \u12301 \u65289 \u12434 \u20837 \u21147 \u12375 \u12390 \u12367 \u12384 \u12373 \u12356 ">\
+    <button onclick="sendMessage()">\uc0\u36865 \u20449 </button>\
+  </div>\
+\
+  <script>\
+    // \uc0\u12481 \u12515 \u12483 \u12488 \u30011 \u38754 \u12395 \u12513 \u12483 \u12475 \u12540 \u12472 \u12434 \u36861 \u21152 \u12377 \u12427 \u38306 \u25968 \
+    function addMessage(text, sender) \{\
+      const chat = document.getElementById("chat");\
+      const msgDiv = document.createElement("div");\
+      msgDiv.classList.add("message", sender);\
+      msgDiv.innerText = text;\
+      chat.appendChild(msgDiv);\
+      chat.scrollTop = chat.scrollHeight;\
+    \}\
+\
+    // \uc0\u29983 \u25104 \u12508 \u12479 \u12531 \u25276 \u19979 \u26178 \u12395 \u12469 \u12540 \u12496 \u12540 \u12395 \u12522 \u12463 \u12456 \u12473 \u12488 \u12434 \u36865 \u12427 \u38306 \u25968 \
+    async function generateScript() \{\
+      addMessage("\uc0\u21407 \u31295 \u29983 \u25104 \u20013 \u12391 \u12377 \u12290 \u23569 \u12293 \u12362 \u24453 \u12385 \u12367 \u12384 \u12373 \u12356 \'85", "bot");\
+      try \{\
+        const response = await fetch('/generate-weather-script', \{\
+          method: 'POST',\
+          headers: \{ 'Content-Type': 'application/json' \},\
+          body: JSON.stringify(\{\})\
+        \});\
+        const data = await response.json();\
+        addMessage(data.script, "bot");\
+      \} catch (error) \{\
+        console.error("Error:", error);\
+        addMessage("\uc0\u21407 \u31295 \u29983 \u25104 \u12395 \u22833 \u25943 \u12375 \u12414 \u12375 \u12383 \u12290 ", "bot");\
+      \}\
+    \}\
+\
+    // \uc0\u20462 \u27491 \u29992 \u36865 \u20449 \u12508 \u12479 \u12531 \u65288 \u20363 \u12392 \u12375 \u12390 \u21336 \u32020 \u12394 \u25991 \u23383 \u32622 \u25563 \u20966 \u29702 \u65289 \
+    async function sendMessage() \{\
+      const input = document.getElementById("userInput");\
+      const userText = input.value.trim();\
+      if(userText === "") return;\
+      addMessage(userText, "user");\
+      // \uc0\u12371 \u12371 \u12391 \u24517 \u35201 \u12395 \u24540 \u12376 \u12289 \u26082 \u23384 \u21407 \u31295 \u12398 \u20462 \u27491 \u20966 \u29702 \u12394 \u12393 \u12434 \u23455 \u35013 \u21487 \u33021 \u12391 \u12377 \
+      input.value = "";\
+    \}\
+  </script>\
+</body>\
+</html>\
+}
