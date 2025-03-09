@@ -32,7 +32,7 @@ app.post('/generate-weather-script', async (req, res) => {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: "o3-mini",  // 利用するモデルを「o3-mini」に変更（※ご確認ください）
+        model: "gpt-3.5-turbo",  // 利用するモデルを「o3-mini」に変更（※ご確認ください）
         messages: [{ role: 'user', content: defaultPrompt }],
         max_tokens: 700,
         temperature: 0.7
