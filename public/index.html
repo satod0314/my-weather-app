@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>テレビ用天気予報原稿AIチャットボット</title>
+  <title>テレビ用天気予報原稿チャットボット</title>
   <style>
-    /* LINE風チャット画面のスタイル */
+    /* シンプルなチャットUIのスタイル */
     body {
       font-family: Arial, sans-serif;
       background: #f0f0f0;
@@ -39,6 +39,7 @@
       max-width: 600px;
       margin: 10px auto 0;
       display: flex;
+      gap: 5px;
     }
     .input-area input {
       flex: 1;
@@ -49,7 +50,6 @@
     .input-area button,
     #generateButton {
       padding: 10px;
-      margin-left: 5px;
       border: none;
       background: #007bff;
       color: #fff;
@@ -65,15 +65,16 @@
 </head>
 <body>
   <div class="chat-container" id="chat">
-    <!-- チャットメッセージがここに表示されます -->
+    <!-- チャットメッセージ表示エリア -->
   </div>
-
+  
   <!-- 原稿生成ボタン -->
   <button id="generateButton">原稿生成</button>
-
+  
+  <!-- 修正用入力エリア -->
   <div class="input-area">
-    <input type="text" id="userInput" placeholder="修正指示を入力してください（例：気温を30度に修正）">
-    <button id="sendButton">送信</button>
+    <input type="text" id="modifyInput" placeholder="修正指示を入力してください（例：気温を30度に変更）">
+    <button id="modifyButton">修正送信</button>
   </div>
 
   <script>
@@ -87,64 +88,60 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-    // 天気予報原稿を生成（サーバーAPI呼び出し）
+    // 原稿生成リクエスト送信関数
     async function generateScript() {
       addMessage("原稿生成中です。しばらくお待ちください...", "bot");
       try {
-        const res = await fetch('/generate-weather-script', {
+        const response = await fetch('/generate-weather-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({})
         });
-        const data = await res.json();
+        const data = await response.json();
         if (data.script) {
           addMessage(data.script, "bot");
         } else {
-          throw new Error(data.error || "原稿が取得できませんでした。");
+          addMessage("原稿生成に失敗しました。", "bot");
         }
       } catch (error) {
-        console.error(error);
+        console.error("Generate Error:", error);
         addMessage("原稿生成に失敗しました。", "bot");
       }
     }
 
-    // 修正指示を送信（※任意の機能：追加実装が必要）
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const userText = input.value.trim();
-      if(userText === "") return;
-
-      addMessage(userText, "user");
-
-      // 修正指示を送る場合（サーバー側で処理を実装する必要があります）
+    // 修正指示送信関数
+    async function sendModification() {
+      const input = document.getElementById("modifyInput");
+      const instruction = input.value.trim();
+      if (instruction === "") return;
+      addMessage("【修正指示】 " + instruction, "user");
       try {
-        const res = await fetch('/modify-weather-script', {
+        const response = await fetch('/modify-weather-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instruction: userText })
+          body: JSON.stringify({ instruction })
         });
-        const data = await res.json();
+        const data = await response.json();
         if (data.modifiedScript) {
           addMessage(data.modifiedScript, "bot");
         } else {
-          throw new Error(data.error || "修正原稿が取得できませんでした。");
+          addMessage("修正処理に失敗しました。", "bot");
         }
       } catch (error) {
-        console.error(error);
+        console.error("Modify Error:", error);
         addMessage("修正処理に失敗しました。", "bot");
       }
-
       input.value = "";
     }
 
-    // ボタンにイベントを割り当て
+    // イベントリスナーの設定
     document.getElementById("generateButton").addEventListener("click", generateScript);
-    document.getElementById("sendButton").addEventListener("click", sendMessage);
+    document.getElementById("modifyButton").addEventListener("click", sendModification);
 
-    // Enterキーでの送信を有効化
-    document.getElementById("userInput").addEventListener("keydown", function(e) {
+    // Enterキーで修正送信を実行（修正入力欄）
+    document.getElementById("modifyInput").addEventListener("keydown", function(e) {
       if (e.key === 'Enter') {
-        sendMessage();
+        sendModification();
       }
     });
   </script>
