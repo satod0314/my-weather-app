@@ -71,7 +71,7 @@
   <!-- 原稿生成ボタン -->
   <button id="generateButton">原稿生成</button>
   
-  <!-- 修正用入力エリア -->
+  <!-- 修正用入力エリア（Enterキー押下では送信しない） -->
   <div class="input-area">
     <input type="text" id="modifyInput" placeholder="修正指示を入力してください（例：気温を30度に変更）">
     <button id="modifyButton">修正送信</button>
@@ -137,11 +137,11 @@
     // イベントリスナーの設定
     document.getElementById("generateButton").addEventListener("click", generateScript);
     document.getElementById("modifyButton").addEventListener("click", sendModification);
-
-    // Enterキーで修正送信を実行（修正入力欄）
+    
+    // 修正入力欄ではEnterキー押下で送信しない（Enterキーの挙動をキャンセル）
     document.getElementById("modifyInput").addEventListener("keydown", function(e) {
       if (e.key === 'Enter') {
-        sendModification();
+        e.preventDefault();
       }
     });
   </script>
