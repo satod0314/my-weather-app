@@ -58,7 +58,7 @@ app.post('/generate-weather-script', async (req, res) => {
     console.log('【生成用プロンプト】', prompt);
 
     // Gemini API を呼び出し原稿生成
-    const scriptResult = await generateContent(prompt);
+    const scriptResult = await generateScript(prompt);
     const generatedScript = scriptResult.result || '原稿生成結果がここに表示されます。';
 
     console.log('【生成原稿】', generatedScript);
