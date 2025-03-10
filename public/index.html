@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>天気予報原稿生成チャットボット</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -32,14 +33,13 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 検証進捗メッセージ用の表示・非表示関数
+    // 検証進捗メッセージ用の表示関数
     function showProgress(message) {
       addMessage(message, 'progress');
     }
 
     // 原稿生成ボタンのクリックイベント
     generateBtn.addEventListener('click', async () => {
-      showProgress('天気情報取得中...');
       showProgress('原稿生成中...');
       try {
         const response = await fetch('/generate-weather-script', {
@@ -58,7 +58,7 @@
       }
     });
 
-    // 修正送信ボタンのクリックイベント（Enterキー押下では送信しない）
+    // 修正送信ボタンのクリックイベント
     modifyBtn.addEventListener('click', async () => {
       const modification = modifyInput.value.trim();
       if (!modification) return;
