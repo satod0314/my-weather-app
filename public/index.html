@@ -2,95 +2,45 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>テレビ用天気予報原稿チャットボット</title>
-  <style>
-    /* シンプルなチャットUIのスタイル */
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 20px;
-    }
-    .chat-container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      height: 70vh;
-      overflow-y: auto;
-    }
-    .message {
-      margin: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      white-space: pre-wrap;
-    }
-    .bot {
-      background: #e1ffc7;
-      text-align: left;
-    }
-    .user {
-      background: #c7d8ff;
-      text-align: right;
-    }
-    .input-area {
-      max-width: 600px;
-      margin: 10px auto 0;
-      display: flex;
-      gap: 5px;
-    }
-    .input-area input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    .input-area button,
-    #generateButton {
-      padding: 10px;
-      border: none;
-      background: #007bff;
-      color: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #generateButton {
-      display: block;
-      max-width: 600px;
-      margin: 10px auto;
-    }
-  </style>
+  <title>天気予報原稿生成チャットボット</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="chat-container" id="chat">
-    <!-- チャットメッセージ表示エリア -->
-  </div>
-  
-  <!-- 原稿生成ボタン -->
-  <button id="generateButton">原稿生成</button>
-  
-  <!-- 修正用入力エリア（Enterキー押下では送信しない） -->
-  <div class="input-area">
-    <input type="text" id="modifyInput" placeholder="修正指示を入力してください（例：気温を30度に変更）">
-    <button id="modifyButton">修正送信</button>
+  <div class="chat-container">
+    <div id="chat-box" class="chat-box">
+      <!-- 生成された原稿および検証進捗メッセージが表示されます -->
+    </div>
+    <div class="controls">
+      <button id="generateBtn">原稿生成</button>
+      <input type="text" id="modifyInput" placeholder="修正指示を入力">
+      <button id="modifyBtn">修正送信</button>
+    </div>
   </div>
 
   <script>
-    // チャット画面にメッセージを追加する関数
-    function addMessage(text, sender) {
-      const chat = document.getElementById("chat");
-      const msgDiv = document.createElement("div");
-      msgDiv.classList.add("message", sender);
-      msgDiv.innerText = text;
-      chat.appendChild(msgDiv);
-      chat.scrollTop = chat.scrollHeight;
+    const chatBox = document.getElementById('chat-box');
+    const generateBtn = document.getElementById('generateBtn');
+    const modifyBtn = document.getElementById('modifyBtn');
+    const modifyInput = document.getElementById('modifyInput');
+
+    // チャットUIにメッセージを追加する関数
+    function addMessage(text, type = 'normal') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ' + type;
+      messageDiv.textContent = text;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 原稿生成リクエスト送信関数
-    async function generateScript() {
-      addMessage("原稿生成中です。しばらくお待ちください...", "bot");
+    // 検証進捗メッセージ用の表示・非表示関数
+    function showProgress(message) {
+      addMessage(message, 'progress');
+    }
+
+    // 原稿生成ボタンのクリックイベント
+    generateBtn.addEventListener('click', async () => {
+      showProgress('天気情報取得中...');
+      showProgress('原稿生成中...');
       try {
         const response = await fetch('/generate-weather-script', {
           method: 'POST',
@@ -99,49 +49,35 @@
         });
         const data = await response.json();
         if (data.script) {
-          addMessage(data.script, "bot");
+          addMessage(data.script, 'script');
         } else {
-          addMessage("原稿生成に失敗しました。", "bot");
+          addMessage('原稿生成に失敗しました。', 'error');
         }
       } catch (error) {
-        console.error("Generate Error:", error);
-        addMessage("原稿生成に失敗しました。", "bot");
+        addMessage('エラーが発生しました。', 'error');
       }
-    }
+    });
 
-    // 修正指示送信関数
-    async function sendModification() {
-      const input = document.getElementById("modifyInput");
-      const instruction = input.value.trim();
-      if (instruction === "") return;
-      addMessage("【修正指示】 " + instruction, "user");
+    // 修正送信ボタンのクリックイベント（Enterキー押下では送信しない）
+    modifyBtn.addEventListener('click', async () => {
+      const modification = modifyInput.value.trim();
+      if (!modification) return;
+      addMessage(`修正指示: 「${modification}」`, 'user');
+      showProgress('修正原稿生成中...');
       try {
         const response = await fetch('/modify-weather-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instruction })
+          body: JSON.stringify({ modification })
         });
         const data = await response.json();
-        if (data.modifiedScript) {
-          addMessage(data.modifiedScript, "bot");
+        if (data.script) {
+          addMessage(data.script, 'script');
         } else {
-          addMessage("修正処理に失敗しました。", "bot");
+          addMessage('修正原稿生成に失敗しました。', 'error');
         }
       } catch (error) {
-        console.error("Modify Error:", error);
-        addMessage("修正処理に失敗しました。", "bot");
-      }
-      input.value = "";
-    }
-
-    // イベントリスナーの設定
-    document.getElementById("generateButton").addEventListener("click", generateScript);
-    document.getElementById("modifyButton").addEventListener("click", sendModification);
-    
-    // 修正入力欄ではEnterキー押下で送信しない（Enterキーの挙動をキャンセル）
-    document.getElementById("modifyInput").addEventListener("keydown", function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
+        addMessage('エラーが発生しました。', 'error');
       }
     });
   </script>

@@ -1,100 +1,147 @@
 // server.js
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-require('dotenv').config(); // .envファイルから環境変数を読み込む
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// 環境変数からAPIキーを取得
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// ヘルパー関数：最新の天気情報を外部APIから取得
+async function fetchWeatherInfo() {
+  try {
+    const weatherApiUrl = `http://api.openweathermap.org/data/2.5/weather?q=${process.env.WEATHER_CITY}&appid=${process.env.WEATHER_API_KEY}&units=metric&lang=ja`;
+    const response = await axios.get(weatherApiUrl);
+    console.log('【天気情報取得結果】', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('【天気情報取得エラー】', error.message);
+    throw new Error('天気情報の取得に失敗しました。');
+  }
+}
 
-// 修正済みデフォルトプロンプトの定義
-const defaultPrompt = `あなたはテレビの天気予報キャスターです。最新の全国の気象情報と天気予報を反映させ、以下の条件に基づいてテレビ放送用の原稿を作成してください。
+// ヘルパー関数：GCP Gemini API を呼び出し原稿生成を実施
+async function generateScript(prompt) {
+  try {
+    const geminiEndpoint = process.env.GEMINI_API_ENDPOINT;
+    const payload = {
+      prompt: prompt,
+      max_output_tokens: 1000  // 必要に応じて調整してください
+      // 他に必要なパラメータがあればここに追加
+    };
 
-【前半】  
-・冒頭で本日の放送日付と、全体の天候傾向（例：「全国的に晴れ間が広がる中、局地的に雨模様」など）を述べる。  
-・その後、全国の雨や雪の様子、雲画像、天気図、あすの天気図、あすの雨の予想、天気分布予想など、放送に必要と思われる1～2項目をピックアップして紹介する。
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.GCP_API_KEY}`
+    };
 
-【後半】  
-・【全国天気】、【全国気温】、【週間予報】の各セクションについては、主要都市ごとに羅列するのではなく、全国全体の傾向を1～2文で簡潔にまとめて記述すること。
+    console.log('【送信プロンプト】', prompt);
+    const response = await axios.post(geminiEndpoint, payload, { headers });
+    console.log('【Gemini API レスポンス】', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('【Gemini API エラー】', error.message);
+    throw new Error('原稿生成に失敗しました。');
+  }
+}
 
-【その他の条件】  
-・放送尺は2分で、文章量は最大700語まで許容する。  
-・放送原稿として、ナレーション風に自然で流れるような文章にする。  
-・各セクションの出力はタイトルと本文を分けること。
-
-以上の条件に基づいて、最新の全国天気予報原稿を日本語で作成してください。`;
-
+// /generate-weather-script エンドポイント
 app.post('/generate-weather-script', async (req, res) => {
   try {
-    console.log("使用するプロンプト:", defaultPrompt);
+    // 最新天気情報の取得
+    const weatherData = await fetchWeatherInfo();
+    const temperature = weatherData.main.temp;
+    const weatherDescription = weatherData.weather[0].description;
+    // 例として気温と天候説明をピックアップ
+    const weatherInfoSnippet = `現在の${process.env.WEATHER_CITY}は${temperature}℃、${weatherDescription}です。`;
 
-    // OpenAI APIへリクエスト送信（モデルはgpt-3.5-turboを使用）
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: 'user', content: defaultPrompt }],
-        max_tokens: 700,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`
-        }
-      }
-    );
+    // 本日の放送日付
+    const today = new Date().toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-    console.log("OpenAI API Response:", JSON.stringify(response.data, null, 2));
-    const script = response.data.choices[0].message.content.trim();
-    console.log("生成された原稿:", script);
-    res.json({ script });
+    // デフォルトプロンプト作成
+    const prompt = `
+【前半】
+本日は ${today} の放送です。全国全体では晴れ間が広がる中、一部地域では雨や雪の兆候も見られます。
+最新の天気予報情報として、${weatherInfoSnippet} など、今日の放送に必要な1～2項目を取り上げます。
+
+【後半】
+【全国天気】：全国の天候傾向を1～2文で簡潔にまとめます。
+【全国気温】：全国の気温動向を1～2文で記載します。
+【週間予報】：1週間の天気の傾向を簡潔にまとめます。
+
+放送尺は2分、文章量は最大700語までとし、ナレーション風に自然で流れる文章でお願いします。
+    `;
+    console.log('【生成用プロンプト】', prompt);
+
+    // Gemini API を呼び出し原稿生成
+    const scriptResult = await generateScript(prompt);
+    // APIレスポンス内のフィールド（例: result）に生成原稿が入っていると仮定
+    const generatedScript = scriptResult.result || '原稿生成結果がここに表示されます。';
+
+    // デバッグ用ログ出力
+    console.log('【最終天気情報】', weatherInfoSnippet);
+    console.log('【生成原稿】', generatedScript);
+
+    res.json({ script: generatedScript });
   } catch (error) {
-    console.error("OpenAI API呼び出しエラー:", error.response ? error.response.data : error.message);
-    res.status(500).json({ error: "原稿生成に失敗しました。" });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// 修正用エンドポイント（修正指示を反映して再生成する）
+// /modify-weather-script エンドポイント：クライアントからの修正指示に応じて原稿再生成
 app.post('/modify-weather-script', async (req, res) => {
   try {
-    const { instruction } = req.body;
-    console.log("修正指示:", instruction);
+    const { modification } = req.body;
+    if (!modification) {
+      return res.status(400).json({ error: '修正指示が必要です。' });
+    }
 
-    const modifiedPrompt = `${defaultPrompt}\n\n【修正指示】\n${instruction}\n\n以上の条件に基づいて、改めて原稿を作成してください。`;
-    console.log("修正後のプロンプト:", modifiedPrompt);
+    // 最新天気情報の取得
+    const weatherData = await fetchWeatherInfo();
+    const temperature = weatherData.main.temp;
+    const weatherDescription = weatherData.weather[0].description;
+    const weatherInfoSnippet = `現在の${process.env.WEATHER_CITY}は${temperature}℃、${weatherDescription}です。`;
 
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: 'user', content: modifiedPrompt }],
-        max_tokens: 700,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`
-        }
-      }
-    );
+    const today = new Date().toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-    console.log("修正後OpenAI API Response:", JSON.stringify(response.data, null, 2));
-    const modifiedScript = response.data.choices[0].message.content.trim();
-    console.log("修正後生成された原稿:", modifiedScript);
-    res.json({ modifiedScript });
+    // 修正指示を反映した新たなプロンプト
+    const prompt = `
+【前半】
+本日は ${today} の放送です。全国全体では晴れ間が広がる中、一部地域では雨や雪の兆候も見られます。
+最新の天気予報情報として、${weatherInfoSnippet} を踏まえ、以下の修正指示を加えた原稿を生成してください：
+【修正指示】：${modification}
+
+【後半】
+【全国天気】：全国の天候傾向を1～2文で簡潔にまとめます。
+【全国気温】：全国の気温動向を1～2文で記載します。
+【週間予報】：1週間の天気の傾向を簡潔にまとめます。
+
+放送尺は2分、文章量は最大700語までとし、ナレーション風に自然で流れる文章でお願いします。
+    `;
+    console.log('【修正生成用プロンプト】', prompt);
+
+    // Gemini API を呼び出し再生成
+    const scriptResult = await generateScript(prompt);
+    const generatedScript = scriptResult.result || '修正後の原稿生成結果がここに表示されます。';
+
+    console.log('【修正指示】', modification);
+    console.log('【生成原稿】', generatedScript);
+
+    res.json({ script: generatedScript });
   } catch (error) {
-    console.error("修正処理エラー:", error.response ? error.response.data : error.message);
-    res.status(500).json({ error: "原稿修正に失敗しました。" });
+    res.status(500).json({ error: error.message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`サーバーはポート ${PORT} で起動中です`);
 });
