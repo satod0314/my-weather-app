@@ -40,17 +40,17 @@ body {
   align-self: flex-end;
 }
 
-/* 生成された原稿（システム側） */
+/* 生成された原稿 */
 .message.script {
   background-color: #fff;
   border: 1px solid #ccc;
   align-self: flex-start;
 }
 
-/* 検証進捗メッセージ */
+/* 検証進捗メッセージ（通常の原稿出力と区別するために異なる色） */
 .message.progress {
-  background-color: #ffeeba;
-  color: #856404;
+  background-color: #d1ecf1;
+  color: #0c5460;
   font-style: italic;
   align-self: center;
 }

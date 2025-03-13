@@ -9,7 +9,7 @@
 <body>
   <div class="chat-container">
     <div id="chat-box" class="chat-box">
-      <!-- 生成された原稿および検証進捗メッセージが表示されます -->
+      <!-- 生成された原稿や検証進捗メッセージがここに表示されます -->
     </div>
     <div class="controls">
       <button id="generateBtn">原稿生成</button>
@@ -33,13 +33,14 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 検証進捗メッセージ用の表示関数
+    // 検証進捗メッセージ用の表示関数（異なるスタイルで表示）
     function showProgress(message) {
       addMessage(message, 'progress');
     }
 
     // 原稿生成ボタンのクリックイベント
     generateBtn.addEventListener('click', async () => {
+      showProgress('天気情報取得中...');
       showProgress('原稿生成中...');
       try {
         const response = await fetch('/generate-weather-script', {
@@ -54,7 +55,8 @@
           addMessage('原稿生成に失敗しました。', 'error');
         }
       } catch (error) {
-        addMessage('エラーが発生しました。', 'error');
+        console.error('Generate Error:', error);
+        addMessage('原稿生成に失敗しました。', 'error');
       }
     });
 
@@ -62,7 +64,7 @@
     modifyBtn.addEventListener('click', async () => {
       const modification = modifyInput.value.trim();
       if (!modification) return;
-      addMessage(`修正指示: 「${modification}」`, 'user');
+      addMessage(`修正指示: ${modification}`, 'user');
       showProgress('修正原稿生成中...');
       try {
         const response = await fetch('/modify-weather-script', {
@@ -77,7 +79,16 @@
           addMessage('修正原稿生成に失敗しました。', 'error');
         }
       } catch (error) {
-        addMessage('エラーが発生しました。', 'error');
+        console.error('Modify Error:', error);
+        addMessage('修正原稿生成に失敗しました。', 'error');
+      }
+      modifyInput.value = '';
+    });
+
+    // 修正入力欄でEnterキー押下時は送信しない
+    modifyInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
       }
     });
   </script>
