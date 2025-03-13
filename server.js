@@ -27,14 +27,14 @@ const defaultPrompt = `
 各段落、項目ごとに改行してください。
 `;
 
-// OpenAI ChatGPT API (o3-mini) を呼び出し原稿生成を実施するヘルパー関数
+// OpenAI ChatGPT API (gpt-3.5-turbo) を呼び出し原稿生成を実施するヘルパー関数
 async function generateChatScript(prompt) {
   try {
     console.log("【送信プロンプト】", prompt);
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: "o3-mini",
+        model: "gpt-3.5-turbo",
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 700,
         temperature: 0.7
