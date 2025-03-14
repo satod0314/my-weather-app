@@ -26,7 +26,6 @@ body {
   background-color: #e5ddd5;
 }
 
-/* 各メッセージは改行を反映するため white-space: pre-wrap; を追加 */
 .message {
   margin: 10px 0;
   padding: 10px 15px;
