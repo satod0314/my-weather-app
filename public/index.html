@@ -107,7 +107,7 @@
         <input type="text" name="originalMenu" placeholder="例：生活情報">
       </div>
       <button type="submit">設定保存</button>
-      <button type="reset">リセット</button>
+      <button type="reset" id="resetBtn">リセット</button>
     </form>
   </div>
 
@@ -129,6 +129,7 @@
     const modifyBtn = document.getElementById('modifyBtn');
     const modifyInput = document.getElementById('modifyInput');
     const settingsForm = document.getElementById('settingsForm');
+    const resetBtn = document.getElementById('resetBtn');
     let settings = {};
 
     // 設定フォーム送信イベント
@@ -143,6 +144,12 @@
         originalMenu: formData.get('originalMenu')
       };
       alert('設定が保存されました。');
+    });
+
+    // リセットイベント：フォームの初期化とチャットボックスのクリア
+    settingsForm.addEventListener('reset', function(e) {
+      settings = {}; // 設定情報を初期化
+      chatBox.innerHTML = ''; // チャットUIの内容をクリア
     });
 
     // チャットUIにメッセージを追加する関数
