@@ -88,20 +88,18 @@
       <div class="form-group">
         <label>天気予報コーナー尺:</label>
         <select name="cornerDuration">
-          <option value="30秒">30秒</option>
-          <option value="1分">1分</option>
-          <option value="2分" selected>2分</option>
-          <option value="3分">3分</option>
-          <option value="4分">4分</option>
-          <option value="5分">5分</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>メニュー数:</label>
-        <select name="menuCount">
-          <option value="4" selected>4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
+          <option value="30秒" selected>30秒</option>
+          <option value="40秒">40秒</option>
+          <option value="50秒">50秒</option>
+          <option value="60秒">60秒</option>
+          <option value="90秒">90秒</option>
+          <option value="120秒">120秒</option>
+          <option value="150秒">150秒</option>
+          <option value="180秒">180秒</option>
+          <option value="210秒">210秒</option>
+          <option value="240秒">240秒</option>
+          <option value="270秒">270秒</option>
+          <option value="300秒">300秒</option>
         </select>
       </div>
       <div class="form-group">
@@ -142,7 +140,6 @@
         timeSlot: formData.get('timeSlot'),
         region: formData.get('region'),
         cornerDuration: formData.get('cornerDuration'),
-        menuCount: formData.get('menuCount'),
         originalMenu: formData.get('originalMenu')
       };
       alert('設定が保存されました。');
@@ -169,8 +166,7 @@
           targetDate: "あす",
           timeSlot: "朝",
           region: "全国",
-          cornerDuration: "2分",
-          menuCount: "4",
+          cornerDuration: "30秒",
           originalMenu: ""
         };
       }

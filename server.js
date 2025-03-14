@@ -11,49 +11,38 @@ app.use(express.static('public'));
 // 環境変数から OpenAI API キーを取得
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// ユーザー入力に基づいてプロンプトを組み立てるヘルパー関数
+// ユーザー設定に基づいてプロンプトを組み立てるヘルパー関数
 function buildPrompt(settings) {
   const {
-    targetDate,      // "あす" or "あさって"
-    timeSlot,        // "朝", "昼", "夜"
-    region,          // "全国", "東北", "関東甲信越", "関東", "東海", "近畿", "四国", "中国", "九州", "沖縄・奄美" または各県
-    cornerDuration,  // "30秒", "1分", "2分", "3分", "4分", "5分"
-    menuCount,       // "4", "5", "6"
-    originalMenu     // 任意文字列
+    targetDate,     // "あす" or "あさって"
+    timeSlot,       // "朝", "昼", "夜"
+    region,         // 例："全国", "東北", "関東甲信越", "関東", "東海", "近畿", "四国", "中国", "九州", "沖縄・奄美", または各県
+    cornerDuration, // 例："30秒", "40秒", "50秒", "60秒", "90秒", "120秒", etc.
+    originalMenu    // 任意文字列
   } = settings;
 
-  // 基本メニューの組み立て（選択した地域情報を反映）
-  const basicMenu = `
-【天気概況】
-【${region}の天気】
-【${region}の気温】
-【${region}の週間予報】
-  `.trim();
-
-  const menuSection = originalMenu ? basicMenu + "\n【オリジナルメニュー】 " + originalMenu : basicMenu;
-  
-  // プロンプト組み立て：最初に作成日時、次に最新の今日・明日の全国天気概要を記述する指示を明記
+  // プロンプト組み立て
   const prompt = `
 必ず出力の最初に、以下の形式で作成日時を記載してください：
 【作成日時】: ${new Date().toLocaleString('ja-JP')}
 
-次に、最新の今日と明日の全国天気の概要を1～2文で記述してください。
+次に、最新の今日と明日の全国天気の概要を、1～2文で記述してください。
 
 対象日時: ${targetDate}、時間帯: ${timeSlot}
-天気予報コーナー尺: ${cornerDuration}、メニュー数: ${menuCount}
+地域: ${region}
+天気予報コーナー尺: ${cornerDuration}
 
-以下のメニューに基づいてテレビ用天気予報原稿を作成してください。
-${menuSection}
-
-各セクション【全国天気】、【全国気温】、【週間予報】は、それぞれ改行して独立した段落で、全国全体の傾向を1～2文でまとめること。
+以下の条件に基づいて、テレビ放送用の天気予報原稿を作成してください。
 放送尺は2分、文章量は最大700語まで許容し、ナレーション風に自然で流れる文章で原稿を作成してください。
 文章の最後に、全体の文字数を括弧内に記載してください。
+
+${ originalMenu ? "【オリジナルメニュー】 " + originalMenu : "" }
   `.trim();
   
   return prompt;
 }
 
-// OpenAI ChatGPT API (gpt-3.5-turbo) を呼び出して原稿生成するヘルパー関数
+// OpenAI ChatGPT API (gpt-3.5-turbo) を呼び出して原稿生成を実施するヘルパー関数
 async function generateChatScript(prompt) {
   try {
     console.log("【送信プロンプト】", prompt);
