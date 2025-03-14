@@ -47,7 +47,7 @@ body {
   align-self: flex-start;
 }
 
-/* 検証進捗メッセージ（通常の原稿出力と区別するために異なる色） */
+/* 検証進捗メッセージ（原稿出力と区別するスタイル） */
 .message.progress {
   background-color: #d1ecf1;
   color: #0c5460;

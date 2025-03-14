@@ -9,7 +9,7 @@
 <body>
   <div class="chat-container">
     <div id="chat-box" class="chat-box">
-      <!-- 生成された原稿や検証進捗メッセージがここに表示されます -->
+      <!-- 生成された原稿や検証進捗メッセージが表示されます -->
     </div>
     <div class="controls">
       <button id="generateBtn">原稿生成</button>
@@ -33,7 +33,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 検証進捗メッセージ用の表示関数（異なるスタイルで表示）
+    // 検証進捗メッセージ用の表示（原稿出力と区別するスタイル）
     function showProgress(message) {
       addMessage(message, 'progress');
     }
