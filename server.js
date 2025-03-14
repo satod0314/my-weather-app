@@ -34,7 +34,7 @@ async function generateChatScript(prompt) {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: "gpt-3.5-turbo",
+        model: "o3-mini-2025-01-31",
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 700,
         temperature: 0.7
