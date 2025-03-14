@@ -11,29 +11,49 @@ app.use(express.static('public'));
 // 環境変数から OpenAI API キーを取得
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// デフォルトプロンプトの定義
-// ・最初に本日の日付と時刻を記載する。
-// ・最新の今日・明日の全国天気の概要を1～2文で記述する。
-// ・その後、各セクション【全国天気】、【全国気温】、【週間予報】で全国全体の傾向を出力するように指示する。
-// ・放送尺は2分、文章量は最大700語まで許容し、ナレーション風に自然で流れる文章とし、文章の最後に全体の文字数を括弧内に記載する。
-const defaultPrompt = `
-必ず出力の最初に、次のフォーマットで本日の日付と時刻、および最新の今日・明日の全国天気概要を記載してください：
-【日付時刻】: YYYY/MM/DD HH:MM:SS
-【概要】: (必ず1～2文で記述)
+// ユーザー入力に基づいてプロンプトを組み立てるヘルパー関数
+function buildPrompt(settings) {
+  const {
+    targetDate,      // "あす" or "あさって"
+    timeSlot,        // "朝", "昼", "夜"
+    region,          // "全国", "東北", "関東甲信越", "関東", "東海", "近畿", "四国", "中国", "九州", "沖縄・奄美", または各県個別選択
+    cornerDuration,  // "30秒", "1分", "2分", "3分", "4分", "5分"
+    menuCount,       // "4", "5", "6"
+    originalMenu     // 任意文字列
+  } = settings;
 
-その後、テレビ放送用の天気予報原稿を以下の条件に基づいて作成してください。
+  // 基本メニューの組み立て（選択した地域情報を反映）
+  const basicMenu = `
+【天気概況】
+【${region}の天気】
+【${region}の気温】
+【${region}の週間予報】
+  `.trim();
+  
+  const menuSection = originalMenu ? basicMenu + "\n【オリジナルメニュー】 " + originalMenu : basicMenu;
+  
+  // プロンプト組み立て
+  const prompt = `
+必ず出力の最初に、以下の形式で作成日時を記載してください：
+【作成日時】: ${new Date().toLocaleString('ja-JP')}
 
-全国全体の天候傾向や放送に必要な情報を組み込み、以下の各セクションを必ず改行して独立した段落で出力してください。
+次に、最新の今日と明日の全国天気概要を1～2文で記述してください。
 
-【全国天気】：全国全体の天候傾向を1～2文で簡潔にまとめること。
-【全国気温】：全国の気温動向を1～2文で簡潔にまとめること。
-【週間予報】：1週間の天気の傾向を1～2文で簡潔にまとめること。
+対象日時: ${targetDate}、時間帯: ${timeSlot}
+天気予報コーナー尺: ${cornerDuration}、メニュー数: ${menuCount}
 
-放送尺は2分、文章量は最大700語まで許容し、ナレーション風に自然で流れる文章で原稿を作成し、文章の最後に全体の文字数を括弧内に記載してください。
-`;
+以下のメニューに基づいてテレビ用天気予報原稿を作成してください。
+${menuSection}
 
+各セクション【全国天気】、【全国気温】、【週間予報】は、それぞれ改行して独立した段落として出力し、全国全体の傾向を1～2文でまとめること。
+放送尺は2分、文章量は最大700語まで許容し、ナレーション風に自然な文章で原稿を作成してください。
+文章の最後に、全体の文字数を括弧内に記載してください。
+  `.trim();
+  
+  return prompt;
+}
 
-// OpenAI ChatGPT API (gpt-3.5-turbo) を呼び出し原稿生成を実施するヘルパー関数
+// OpenAI ChatGPT API (gpt-3.5-turbo) を呼び出し原稿生成するヘルパー関数
 async function generateChatScript(prompt) {
   try {
     console.log("【送信プロンプト】", prompt);
@@ -63,9 +83,11 @@ async function generateChatScript(prompt) {
 // /generate-weather-script エンドポイント
 app.post('/generate-weather-script', async (req, res) => {
   try {
-    // 外部天気情報取得処理はここで実装可能（例：OpenWeatherMap APIから取得） - 今回は省略
-    // ここでは、defaultPrompt の指示に基づいて原稿生成を実施
-    const prompt = defaultPrompt;
+    const settings = req.body.settings;
+    if (!settings) {
+      return res.status(400).json({ error: "設定情報が必要です。" });
+    }
+    const prompt = buildPrompt(settings);
     console.log("【生成用プロンプト】", prompt);
     
     const generatedScript = await generateChatScript(prompt);
@@ -79,11 +101,11 @@ app.post('/generate-weather-script', async (req, res) => {
 // /modify-weather-script エンドポイント：修正指示を反映して再生成
 app.post('/modify-weather-script', async (req, res) => {
   try {
-    const { modification } = req.body;
+    const { modification, settings } = req.body;
     if (!modification) {
       return res.status(400).json({ error: "修正指示が必要です。" });
     }
-    const prompt = `${defaultPrompt}\n\n【修正指示】 ${modification}`;
+    const prompt = buildPrompt(settings) + `\n\n【修正指示】 ${modification}`;
     console.log("【修正生成用プロンプト】", prompt);
     
     const modifiedScript = await generateChatScript(prompt);

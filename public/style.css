@@ -6,6 +6,58 @@ body {
   background-color: #f2f2f2;
 }
 
+.settings-form {
+  width: 90%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.settings-form h2 {
+  margin-top: 0;
+}
+
+.settings-form .form-group {
+  margin-bottom: 10px;
+}
+
+.settings-form label {
+  margin-right: 5px;
+}
+
+.settings-form input[type="text"],
+.settings-form select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.settings-form button {
+  padding: 8px 12px;
+  border: none;
+  background-color: #4caf50;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.settings-form button:hover {
+  background-color: #45a049;
+}
+
+.prefecture-fieldset {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.prefecture-fieldset legend {
+  font-weight: bold;
+}
+
 .chat-container {
   width: 90%;
   max-width: 600px;
