@@ -42,6 +42,7 @@ body {
   color: #fff;
   border-radius: 4px;
   cursor: pointer;
+  margin-right: 5px;
 }
 
 .settings-form button:hover {
@@ -100,7 +101,7 @@ body {
   align-self: flex-start;
 }
 
-/* 検証進捗メッセージ（原稿出力と区別するスタイル） */
+/* 検証進捗メッセージ */
 .message.progress {
   background-color: #d1ecf1;
   color: #0c5460;
